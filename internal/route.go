@@ -53,16 +53,4 @@ func Routes(e *echo.Echo) {
 
 	e.POST(router.BaseURL+"/send/text", ctlWhatsApp.SendText, middleware.JWTWithConfig(authJWTConfig))
 	e.POST(router.BaseURL+"/send/location", ctlWhatsApp.SendLocation, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/send/contact", ctlWhatsApp.SendContact, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/send/link", ctlWhatsApp.SendLink, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/send/document", ctlWhatsApp.SendDocument, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/send/image", ctlWhatsApp.SendImage, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/send/audio", ctlWhatsApp.SendAudio, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/send/video", ctlWhatsApp.SendVideo, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/send/sticker", ctlWhatsApp.SendSticker, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/send/poll", ctlWhatsApp.SendPoll, middleware.JWTWithConfig(authJWTConfig))
-
-	e.POST(router.BaseURL+"/message/edit", ctlWhatsApp.MessageEdit, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/message/react", ctlWhatsApp.MessageEdit, middleware.JWTWithConfig(authJWTConfig))
-	e.POST(router.BaseURL+"/message/delete", ctlWhatsApp.MessageDelete, middleware.JWTWithConfig(authJWTConfig))
 }
