@@ -3,13 +3,14 @@ package internal
 import (
 	"github.com/dimaskiddo/go-whatsapp-multidevice-rest/pkg/log"
 	pkgWhatsApp "github.com/dimaskiddo/go-whatsapp-multidevice-rest/pkg/whatsapp"
+	"context"
 )
 
 func Startup() {
 	log.Print(nil).Info("Running Startup Tasks")
 
 	// Load All WhatsApp Client Devices from Datastore
-	devices, err := pkgWhatsApp.WhatsAppDatastore.GetAllDevices()
+	devices, err := pkgWhatsApp.WhatsAppDatastore.GetAllDevices(context.Background())
 	if err != nil {
 		log.Print(nil).Error("Failed to Load WhatsApp Client Devices from Datastore")
 	}
