@@ -2,6 +2,7 @@ package whatsapp
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"mime/multipart"
 	"strconv"
@@ -193,7 +194,7 @@ func GetGroup(c echo.Context) error {
 	var err error
 	jid := jwtPayload(c).JID
 
-	group, err := pkgWhatsApp.WhatsAppGroupGet(jid)
+	group, err := pkgWhatsApp.WhatsAppGroupGet(context.Background(), jid)
 	if err != nil {
 		return router.ResponseInternalError(c, err.Error())
 	}

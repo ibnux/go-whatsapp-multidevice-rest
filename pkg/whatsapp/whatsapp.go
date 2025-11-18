@@ -31,7 +31,6 @@ var (
 
 func init() {
 	var err error
-
 	dbType, err := env.GetEnvString("WHATSAPP_DATASTORE_TYPE")
 	if err != nil {
 		log.Print(nil).Fatal("Error Parse Environment Variable for WhatsApp Client Datastore Type")
@@ -42,7 +41,7 @@ func init() {
 		log.Print(nil).Fatal("Error Parse Environment Variable for WhatsApp Client Datastore URI")
 	}
 
-	datastore, err := sqlstore.New(dbType, dbURI, nil)
+	datastore, err := sqlstore.New(context.Background(), dbType, dbURI, nil)
 	if err != nil {
 		log.Print(nil).Fatal("Error Connect WhatsApp Client Datastore")
 	}
@@ -97,7 +96,7 @@ func WhatsAppInitClient(device *store.Device, jid string) {
 		WhatsAppClient[jid].AutoTrustIdentity = true
 
 		// Disable Self Broadcast
-		WhatsAppClient[jid].DontSendSelfBroadcast = true
+		//WhatsAppClient[jid].DontSendSelfBroadcast = true
 	}
 }
 
@@ -227,7 +226,7 @@ func WhatsAppLoginPair(jid string) (string, int, error) {
 			}
 
 			// Request Pairing Code
-			code, err := WhatsAppClient[jid].PairPhone(jid, true, whatsmeow.PairClientChrome, "Chrome ("+WhatsAppGetUserOS()+")")
+			code, err := WhatsAppClient[jid].PairPhone(context.Background(), jid, true, whatsmeow.PairClientChrome, "Chrome ("+WhatsAppGetUserOS()+")")
 			if err != nil {
 				return "", 0, err
 			}
@@ -281,13 +280,13 @@ func WhatsAppLogout(jid string) error {
 			WhatsAppPresence(jid, false)
 
 			// Logout WhatsApp Client and Disconnect from WebSocket
-			err = WhatsAppClient[jid].Logout()
+			err = WhatsAppClient[jid].Logout(context.Background())
 			if err != nil {
 				// Force Disconnect
 				WhatsAppClient[jid].Disconnect()
 
 				// Manually Delete Device from Datastore Store
-				err = WhatsAppClient[jid].Store.Delete()
+				err = WhatsAppClient[jid].Store.Delete(context.Background())
 				if err != nil {
 					return err
 				}
@@ -326,7 +325,7 @@ func WhatsAppGetJID(jid string, id string) types.JID {
 		var ids []string
 
 		ids = append(ids, "+"+id)
-		infos, err := WhatsAppClient[jid].IsOnWhatsApp(ids)
+		infos, err := WhatsAppClient[jid].IsOnWhatsApp(context.Background(), ids)
 		if err == nil {
 			// If WhatsApp ID is Registered Then
 			// Return ID Information
@@ -394,9 +393,9 @@ func WhatsAppDecomposeJID(id string) string {
 
 func WhatsAppPresence(jid string, isAvailable bool) {
 	if isAvailable {
-		_ = WhatsAppClient[jid].SendPresence(types.PresenceAvailable)
+		_ = WhatsAppClient[jid].SendPresence(context.Background(), types.PresenceAvailable)
 	} else {
-		_ = WhatsAppClient[jid].SendPresence(types.PresenceUnavailable)
+		_ = WhatsAppClient[jid].SendPresence(context.Background(), types.PresenceUnavailable)
 	}
 }
 
@@ -418,7 +417,7 @@ func WhatsAppComposeStatus(jid string, rjid types.JID, isComposing bool, isAudio
 	}
 
 	// Send Chat Compose Status
-	_ = WhatsAppClient[jid].SendChatPresence(rjid, typeCompose, typeComposeMedia)
+	_ = WhatsAppClient[jid].SendChatPresence(context.Background(), rjid, typeCompose, typeComposeMedia)
 }
 
 func WhatsAppCheckRegistered(jid string, id string) error {
@@ -592,7 +591,7 @@ func WhatsAppSendContact(ctx context.Context, jid string, rjid string, contactNa
 	return "", errors.New("WhatsApp Client is not Valid")
 }
 
-func WhatsAppGroupGet(jid string) ([]types.GroupInfo, error) {
+func WhatsAppGroupGet(ctx context.Context, jid string) ([]types.GroupInfo, error) {
 	if WhatsAppClient[jid] != nil {
 		var err error
 
@@ -603,7 +602,7 @@ func WhatsAppGroupGet(jid string) ([]types.GroupInfo, error) {
 		}
 
 		// Get Joined Group List
-		groups, err := WhatsAppClient[jid].GetJoinedGroups()
+		groups, err := WhatsAppClient[jid].GetJoinedGroups(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -633,7 +632,7 @@ func WhatsAppGroupJoin(jid string, link string) (string, error) {
 		}
 
 		// Join Group By Invitation Link
-		gid, err := WhatsAppClient[jid].JoinGroupWithLink(link)
+		gid, err := WhatsAppClient[jid].JoinGroupWithLink(context.Background(), link)
 		if err != nil {
 			return "", err
 		}
@@ -668,7 +667,7 @@ func WhatsAppGroupLeave(jid string, gjid string) error {
 		}
 
 		// Leave Group By Group ID
-		return WhatsAppClient[jid].LeaveGroup(groupJID)
+		return WhatsAppClient[jid].LeaveGroup(context.Background(), groupJID)
 	}
 
 	// Return Error WhatsApp Client is not Valid
