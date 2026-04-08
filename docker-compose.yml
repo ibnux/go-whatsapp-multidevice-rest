@@ -1,9 +1,3 @@
-version: '3'
-
-networks:
-  whatsapp:
-    driver: bridge
-
 services:
   go-whatsapp-multidevice-rest:
     build:
@@ -20,3 +14,7 @@ services:
     volumes:
       - ./dbs:/usr/app/gowam-rest/dbs
     restart: unless-stopped
+
+networks:
+  whatsapp:
+    driver: bridge
