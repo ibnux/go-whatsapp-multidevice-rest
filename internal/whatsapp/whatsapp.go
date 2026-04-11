@@ -421,8 +421,9 @@ func SendLink(c echo.Context) error {
 // @Tags        WhatsApp Send Message
 // @Accept      multipart/form-data
 // @Produce     json
-// @Param       msisdn    formData  string  true  "Destination WhatsApp Personal ID or Group ID"
-// @Param       document  formData  file    true  "Document File"
+// @Param       msisdn    formData  string  true   "Destination WhatsApp Personal ID or Group ID"
+// @Param       document  formData  file    true   "Document File"
+// @Param       caption   formData  string  false  "Caption Document Message"
 // @Success     200
 // @Security    BearerAuth
 // @Router      /send/document [post]
@@ -509,6 +510,7 @@ func sendMedia(c echo.Context, mediaType string) error {
 	case "document":
 		fileStream, fileHeader, err = c.Request().FormFile("document")
 		reqSendMessage.Message = fileHeader.Filename
+		reqSendMessage.Caption = strings.TrimSpace(c.FormValue("caption"))
 
 	case "image":
 		fileStream, fileHeader, err = c.Request().FormFile("image")
@@ -572,7 +574,7 @@ func sendMedia(c echo.Context, mediaType string) error {
 	var resSendMessage typWhatsApp.ResponseSendMessage
 	switch mediaType {
 	case "document":
-		resSendMessage.MsgID, err = pkgWhatsApp.WhatsAppSendDocument(jid, reqSendMessage.RJID, fileBytes, fileType, reqSendMessage.Message)
+		resSendMessage.MsgID, err = pkgWhatsApp.WhatsAppSendDocument(jid, reqSendMessage.RJID, fileBytes, fileType, reqSendMessage.Message, reqSendMessage.Caption)
 
 	case "image":
 		resSendMessage.MsgID, err = pkgWhatsApp.WhatsAppSendImage(jid, reqSendMessage.RJID, fileBytes, fileType, reqSendMessage.Message, reqSendMessage.ViewOnce)

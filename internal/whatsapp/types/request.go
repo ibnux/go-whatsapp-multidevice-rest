@@ -7,6 +7,7 @@ type RequestLogin struct {
 type RequestSendMessage struct {
 	RJID     string
 	Message  string
+	Caption  string
 	ViewOnce bool
 }
 
