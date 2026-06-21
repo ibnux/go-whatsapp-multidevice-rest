@@ -335,7 +335,7 @@ func WhatsAppGetJID(jid string, id string) types.JID {
 
 		ids = append(ids, "+"+id)
 		infos, err := WhatsAppClient[jid].IsOnWhatsApp(context.Background(), ids)
-		if err == nil {
+		if err == nil && len(infos) > 0 {
 			// If WhatsApp ID is Registered Then
 			// Return ID Information
 			if infos[0].IsIn {
