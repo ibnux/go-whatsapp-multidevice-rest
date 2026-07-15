@@ -281,7 +281,7 @@ func extractMessageText(v *events.Message) string {
 func handleMessage(jid string, v *events.Message) {
 	info := v.Info
 	chat := info.Chat
-	messageID := info.ID
+	//messageID := info.ID
 
 	// Resolve sender and chat to phone numbers (LID → PN)
 	senderDisplay := resolvePhoneNumber(info.Sender, info.SenderAlt)
@@ -407,26 +407,26 @@ func handleIdentityChange(jid string, v *events.IdentityChange) {
 // WhatsAppMarkRead sends read receipts for the specified message IDs in a chat.
 // This is essential for WhatsApp to know the client has read messages.
 // MarkRead takes: context, messageIDs, timestamp, chat JID, sender JID (empty for own messages).
-func WhatsAppMarkRead(jid string, chatJID types.JID, messageIDs []string) error {
-	client, ok := WhatsAppClient[jid]
-	if !ok || client == nil {
-		return nil
-	}
+// func WhatsAppMarkRead(jid string, chatJID types.JID, messageIDs []string) error {
+// 	client, ok := WhatsAppClient[jid]
+// 	if !ok || client == nil {
+// 		return nil
+// 	}
 
-	if !client.IsConnected() || !client.IsLoggedIn() {
-		log.Print(nil).Debugf("[%s] Cannot mark read: client not connected/logged in", maskJID(jid))
-		return nil
-	}
+// 	if !client.IsConnected() || !client.IsLoggedIn() {
+// 		log.Print(nil).Debugf("[%s] Cannot mark read: client not connected/logged in", maskJID(jid))
+// 		return nil
+// 	}
 
-	err := client.MarkRead(context.Background(), messageIDs, time.Now(), chatJID, types.EmptyJID)
-	if err != nil {
-		log.Print(nil).Errorf("[%s] Failed to mark read: %v", maskJID(jid), err)
-		return err
-	}
+// 	err := client.MarkRead(context.Background(), messageIDs, time.Now(), chatJID, types.EmptyJID)
+// 	if err != nil {
+// 		log.Print(nil).Errorf("[%s] Failed to mark read: %v", maskJID(jid), err)
+// 		return err
+// 	}
 
-	log.Print(nil).Debugf("[%s] Marked %d message(s) as read in %s", maskJID(jid), len(messageIDs), chatJID)
-	return nil
-}
+// 	log.Print(nil).Debugf("[%s] Marked %d message(s) as read in %s", maskJID(jid), len(messageIDs), chatJID)
+// 	return nil
+// }
 
 // maskJID masks the JID for logging (shows last 4 digits)
 func maskJID(jid string) string {
