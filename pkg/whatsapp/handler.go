@@ -303,10 +303,10 @@ func handleMessage(jid string, v *events.Message) {
 
 	// Send read receipt to acknowledge the message
 	// This is critical for WhatsApp to consider this client as a proper web client
-	err := WhatsAppMarkRead(jid, chat, []string{messageID})
-	if err != nil {
-		log.Print(nil).Errorf("[%s] Failed to mark message %s as read: %v", maskJID(jid), messageID, err)
-	}
+	// err := WhatsAppMarkRead(jid, chat, []string{messageID})
+	// if err != nil {
+	// 	log.Print(nil).Errorf("[%s] Failed to mark message %s as read: %v", maskJID(jid), messageID, err)
+	// }
 }
 
 // handleReceipt processes delivery/read receipts from other users
