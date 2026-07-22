@@ -16,42 +16,42 @@ import (
 	"github.com/dimaskiddo/go-whatsapp-multidevice-rest/pkg/log"
 )
 
-// Callback configuration loaded from .env
+// Webhook configuration loaded from .env
 var (
-	callbackURL   string
-	callbackTypes []string // parsed from CALLBACK_TYPE (comma-separated: user,group,status)
+	webhookURL   string
+	webhookTypes []string // parsed from WEBHOOK_TYPE (comma-separated: user,group,status)
 )
 
 func init() {
-	// Load callback URL (optional, can be empty)
-	url, err := env.GetEnvString("CALLBACK_URL")
+	// Load webhook URL (optional, can be empty)
+	url, err := env.GetEnvString("WEBHOOK_URL")
 	if err == nil && len(url) > 0 {
-		callbackURL = url
-		log.Print(nil).Infof("Callback URL configured: %s", callbackURL)
+		webhookURL = url
+		log.Print(nil).Infof("Webhook URL configured: %s", webhookURL)
 	} else {
-		log.Print(nil).Info("No callback URL configured (CALLBACK_URL is empty)")
+		log.Print(nil).Info("No webhook URL configured (WEBHOOK_URL is empty)")
 	}
 
-	// Load callback types (default: all three)
-	rawTypes, err := env.GetEnvString("CALLBACK_TYPE")
+	// Load webhook types (default: all three)
+	rawTypes, err := env.GetEnvString("WEBHOOK_TYPE")
 	if err == nil && len(rawTypes) > 0 {
 		parts := strings.Split(rawTypes, ",")
 		for _, p := range parts {
 			t := strings.TrimSpace(strings.ToLower(p))
 			if t == "user" || t == "group" || t == "status" {
-				callbackTypes = append(callbackTypes, t)
+				webhookTypes = append(webhookTypes, t)
 			}
 		}
-		log.Print(nil).Infof("Callback types configured: %s", strings.Join(callbackTypes, ", "))
+		log.Print(nil).Infof("Webhook types configured: %s", strings.Join(webhookTypes, ", "))
 	} else {
 		// Default: enable all types
-		callbackTypes = []string{"user", "group", "status"}
-		log.Print(nil).Info("No CALLBACK_TYPE set, defaulting to user,group,status")
+		webhookTypes = []string{"user", "group", "status"}
+		log.Print(nil).Info("No WEBHOOK_TYPE set, defaulting to user,group,status")
 	}
 }
 
-// CallbackPayload is the JSON payload sent to the callback URL.
-type CallbackPayload struct {
+// WebhookPayload is the JSON payload sent to the webhook URL.
+type WebhookPayload struct {
 	JID       string `json:"jid"`
 	From      string `json:"from"`
 	Chat      string `json:"chat"`
@@ -74,12 +74,12 @@ func getMessageType(chat types.JID) string {
 	}
 }
 
-// shouldSendCallback checks if the given message type should trigger a callback.
-func shouldSendCallback(msgType string) bool {
-	if len(callbackURL) == 0 {
+// shouldSendWebhook checks if the given message type should trigger a webhook.
+func shouldSendWebhook(msgType string) bool {
+	if len(webhookURL) == 0 {
 		return false
 	}
-	for _, t := range callbackTypes {
+	for _, t := range webhookTypes {
 		if t == msgType {
 			return true
 		}
@@ -87,13 +87,13 @@ func shouldSendCallback(msgType string) bool {
 	return false
 }
 
-// sendCallback sends a POST request to the configured callback URL with message details.
-func sendCallback(jid string, v *events.Message, msgType string, messageText string, senderDisplay string, chatDisplay string) {
-	if len(callbackURL) == 0 {
+// sendWebhook sends a POST request to the configured webhook URL with message details.
+func sendWebhook(jid string, v *events.Message, msgType string, messageText string, senderDisplay string, chatDisplay string) {
+	if len(webhookURL) == 0 {
 		return
 	}
 
-	payload := CallbackPayload{
+	payload := WebhookPayload{
 		JID:       jid,
 		From:      senderDisplay,
 		Chat:      chatDisplay,
@@ -106,7 +106,7 @@ func sendCallback(jid string, v *events.Message, msgType string, messageText str
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		log.Print(nil).Errorf("[%s] Failed to marshal callback payload: %v", maskJID(jid), err)
+		log.Print(nil).Errorf("[%s] Failed to marshal webhook payload: %v", maskJID(jid), err)
 		return
 	}
 
@@ -115,24 +115,24 @@ func sendCallback(jid string, v *events.Message, msgType string, messageText str
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, callbackURL, bytes.NewReader(jsonData))
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhookURL, bytes.NewReader(jsonData))
 		if err != nil {
-			log.Print(nil).Errorf("[%s] Failed to create callback request: %v", maskJID(jid), err)
+			log.Print(nil).Errorf("[%s] Failed to create webhook request: %v", maskJID(jid), err)
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.Print(nil).Errorf("[%s] Callback request failed: %v", maskJID(jid), err)
+			log.Print(nil).Errorf("[%s] Webhook request failed: %v", maskJID(jid), err)
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode >= 300 {
-			log.Print(nil).Warnf("[%s] Callback returned non-2xx status: %d", maskJID(jid), resp.StatusCode)
+			log.Print(nil).Warnf("[%s] Webhook returned non-2xx status: %d", maskJID(jid), resp.StatusCode)
 		} else {
-			log.Print(nil).Debugf("[%s] Callback sent successfully (%s, type=%s)", maskJID(jid), v.Info.ID, msgType)
+			log.Print(nil).Debugf("[%s] Webhook sent successfully (%s, type=%s)", maskJID(jid), v.Info.ID, msgType)
 		}
 	}()
 }
@@ -277,7 +277,7 @@ func extractMessageText(v *events.Message) string {
 // handleMessage processes incoming messages:
 // - Logs the message with resolved phone numbers
 // - Sends read receipt to acknowledge receipt
-// - Sends callback if configured
+// - Sends webhook if configured
 func handleMessage(jid string, v *events.Message) {
 	info := v.Info
 	chat := info.Chat
@@ -293,12 +293,12 @@ func handleMessage(jid string, v *events.Message) {
 	log.Print(nil).Infof("[%s] Message received from %s in %s: %s",
 		maskJID(jid), senderDisplay, chatDisplay, messageText)
 
-	// Determine message type for callback filtering
+	// Determine message type for webhook filtering
 	msgType := getMessageType(chat)
 
-	// Send callback if this message type should trigger one
-	if shouldSendCallback(msgType) {
-		sendCallback(jid, v, msgType, messageText, senderDisplay, chatDisplay)
+	// Send webhook if this message type should trigger one
+	if shouldSendWebhook(msgType) {
+		sendWebhook(jid, v, msgType, messageText, senderDisplay, chatDisplay)
 	}
 
 	// Send read receipt to acknowledge the message
